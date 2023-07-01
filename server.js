@@ -57,7 +57,7 @@ function respondEcho(req,res){
         let contentType = 'text/plain';
         if (extension === '.html') {
           contentType = 'text/html';
-        } else if (extension === '.css') {
+        } else if (extension === '.css'||extension === 'min.css') {
           contentType = 'text/css';
         } else if (extension === '.js') {
           contentType = 'application/javascript'; // Update the MIME type for JavaScript files
@@ -80,8 +80,8 @@ function respondEcho(req,res){
       
 
 function respondChat (req, res) {
-    const {message,userName} = req.query;
-    chatEmitter.emit('message', message,userName);
+    const {message} = req.query;
+    chatEmitter.emit('message', message);
     res.end();
 }
 
@@ -92,20 +92,13 @@ function respondSSE (req, res) {
     });
     
 
-    const onMessage = (msg,userName) => res.write(`data: ${msg},userName:${userName}\n\n`);
-    chatEmitter.on('message', (msg,userName) => {
-      console.log(msg,userName);
-      const data = {};
-      data.msg = msg;
-      data.userName = userName;
-
-      res.write(`data: ${data.msg}, userName: ${userName}\n\n`);
-  });
+    const onMessage = msg => res.write(`data: ${msg}\n\n`);
+    chatEmitter.on('message', onMessage);
 
     res.on('close', function() {
         chatEmitter.off('message', onMessage);
     })
-    }
+}
 
 function respondNotFound (req,res) {
     res.writeHead(404, { 'Content-Type' : 'text/plain'});
