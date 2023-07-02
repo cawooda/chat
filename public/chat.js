@@ -1,5 +1,12 @@
 var count = 0;
 
+function getPreviousMessages (){
+    console.log("Getpreviousmessages ran");
+    window.fetch(`/chat?start=true`);
+
+}
+
+document.addEventListener('DOMContentLoaded',getPreviousMessages);
 
 new window.EventSource('/sse').onmessage = function(event) {
     window.messages.innerHTML += (count%2)?`<p class="talk-bubble tri-right border round btm-left-in">${event.data}</p>`

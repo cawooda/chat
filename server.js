@@ -80,10 +80,52 @@ function respondEcho(req,res){
       
 
 function respondChat (req, res) {
-    const {message} = req.query;
-    chatEmitter.emit('message', message);
-    res.end();
-}
+    const {message,start} = req.query;
+    console.log("message",message);
+    console.log("start",start);
+    function startLoad () {
+      fs.readFile('message.txt','utf8',(err,data)=>{
+        if (err) {
+        console.error(err);
+        res.status(500).end();
+        return;
+      }
+      chatEmitter.emit('start',data);
+      res.end();
+
+      });
+      
+    }
+    function chatMessage () {
+      fs.appendFile('message.txt',`${message}\n`,(err)=>{
+        if (err) {
+        console.error(err);
+        res.status(500).end();
+        return;
+        } 
+        console.log("Succesfully appended");
+
+        chatEmitter.emit('message', message);
+
+        res.end();  
+      });
+      }
+    
+    start ? startLoad()
+    : chatMessage();
+  }
+    /* start ? fs.readFile('message.txt', 'utf8',(err,data)=>{
+        console.log("data is:",data);
+        chatEmitter.emit('message',message);
+        console.log("start is:",start);
+        res.end();
+      })
+    : ()=> {console.log("not new"); 
+        console.log(req.query);
+        console.log("message is",message);
+        
+      } */
+
 
 function respondSSE (req, res) {
     res.writeHead(200, {
@@ -93,7 +135,10 @@ function respondSSE (req, res) {
     
 
     const onMessage = msg => res.write(`data: ${msg}\n\n`);
+    const onStart = msg => res.write(`data: ${msg}\n\n`);
+    chatEmitter.on('start', onStart);
     chatEmitter.on('message', onMessage);
+
 
     res.on('close', function() {
         chatEmitter.off('message', onMessage);
